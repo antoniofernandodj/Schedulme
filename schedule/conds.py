@@ -1,9 +1,9 @@
 import abc
 from datetime import date, datetime, time
-from typing import Generic, List, Optional, Union, TypeVar, TypeGuard  # noqa
+from typing import Generic, List, Optional, Union, TypeVar, TypeGuard, Type  # noqa
 
-TimeConditionValueType = TypeVar('TimeConditionValueType')
-ScheduleConditionValueType = Union[date, datetime, 'TimeCondition']
+TimeConditionValueType = TypeVar("TimeConditionValueType")
+ScheduleConditionValueType = Union[date, datetime, "TimeCondition", Type["Second"]]
 
 
 class TimeCondition(Generic[TimeConditionValueType], abc.ABC):
@@ -25,7 +25,7 @@ class ScheduleCondition(abc.ABC):
 
 class Once(ScheduleCondition):
 
-    executed: List['Once'] = []
+    executed: List["Once"] = []
 
     def __init__(self, value: ScheduleConditionValueType) -> None:
         if isinstance(value, date) and not isinstance(value, datetime):
@@ -43,9 +43,8 @@ class Once(ScheduleCondition):
             datetime_obj = datetime.combine(self.value, datetime.min.time())
             result = (datetime_obj - current_time).seconds == 0
 
-        elif (
-            not isinstance(self.value, datetime) and
-            issubclass(type(self.value), TimeCondition)
+        elif not isinstance(self.value, datetime) and issubclass(
+            type(self.value), TimeCondition
         ):
             result = self.value.matches(current_time)
 
@@ -72,13 +71,16 @@ class Every(ScheduleCondition):
             datetime_obj = datetime.combine(self.value, datetime.min.time())
             result = (datetime_obj - current_time).seconds == 0
 
-        elif (
-            not isinstance(self.value, datetime) and
-            issubclass(type(self.value), TimeCondition)
+        elif not isinstance(self.value, datetime) and issubclass(
+            type(self.value), TimeCondition
         ):
             result = self.value.matches(current_time)
 
+        elif self.value == Second:
+            result = True
+
         else:
+            breakpoint()
             raise NotImplementedError
 
         return result
@@ -89,7 +91,9 @@ class DayTime(TimeCondition):
         self.time = time(hour, minute, second)
 
     def matches(self, current_time: datetime) -> bool:
-        return current_time.time() == self.time
+        c = current_time
+        t = self.time
+        return c.hour == t.hour and c.minute == t.minute and c.second == t.second
 
     def __str__(self):
         return f"{self.__class__.__name__}({self.time.strftime('%H:%M:%S')})"
