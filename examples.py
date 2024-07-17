@@ -9,7 +9,7 @@ from schedule import (
     Hour,
     Second,
     DayOfMonth,
-    DayOfWeek
+    DayOfWeek,
 )
 
 sched = Schedule()
@@ -19,12 +19,26 @@ bp2 = Blueprint()
 bp3 = Blueprint()
 
 
-@bp1.task(Once(date(day=10, month=8, year=2024)))
+def callback1(result):
+    print(result)
+
+
+def callback2(error):
+    print(error)
+
+
+@bp1.task(
+    Once(date(day=10, month=8, year=2024)),
+    after_success=callback1,
+    after_failure=callback2,
+)
 def test_once_date():
     print(f"Task test_once_date executed at {datetime.now()}.")
 
 
-@bp1.task(Once(datetime(hour=12, minute=0, second=0, day=10, month=8, year=2024)))  # noqa
+@bp1.task(
+    Once(datetime(hour=12, minute=0, second=0, day=10, month=8, year=2024))
+)  # noqa
 def test_once_datetime():
     print(f"Task test_once_datetime executed at {datetime.now()}.")
 
