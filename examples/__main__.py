@@ -4,11 +4,11 @@ import os
 
 sys.path.append(os.getcwd())
 
-from bp1 import bp1
-from bp2 import bp2
-from bp3 import bp3
+from bp1 import bp1  # type: ignore # noqa
+from bp2 import bp2  # type: ignore # noqa
+from bp3 import bp3  # type: ignore # noqa
 
-from schedule import (
+from schedule import (  # noqa
     Schedule,
     Every,
     Second,
@@ -25,12 +25,7 @@ app.register_blueprint(bp3)
 
 @app.task(Every(Second()))
 def app_test_every_second():
-    print(f"Task test_every_second 1 executed at {datetime.now()}.")
-
-
-@app.task(Every(Second))
-def app_test_every_second():
-    print(f"Task test_every_second 2 executed at {datetime.now()}.")
+    print(f"Task test_every_second executed at {datetime.now()}.")
 
 
 if __name__ == "__main__":

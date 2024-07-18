@@ -11,7 +11,7 @@ from schedule.utils import (
     print_yellow,
 )
 from schedule.blueprint import Blueprint, Task
-from schedule.conds import ScheduleCondition
+from schedule.conds import Condition
 
 
 class Schedule:
@@ -19,19 +19,17 @@ class Schedule:
         self.name = name
         self.tasks: List[Task] = []
         self.blueprints: List[Blueprint] = []
-        self.resources_before = self.resources()
-        self.resources_running = []
 
     def task(
         self,
-        schedule: ScheduleCondition,
+        schedule: Condition,
         after_success=None,
         after_failure=None,
         always=None,
     ):
         def decorator(func: Callable):
             task = Task(
-                schedule_condition=schedule,
+                condition=schedule,
                 func=func,
                 after_success=after_success,
                 after_failure=after_failure,
@@ -53,8 +51,8 @@ class Schedule:
             print_yellow(
                 "Task: {}, Schedule: {}({})".format(
                     task.func.__name__,
-                    task.schedule_condition.__class__.__name__,
-                    task.schedule_condition.value,
+                    task.condition.__class__.__name__,
+                    task.condition.value,
                 )
             )
 
@@ -80,26 +78,7 @@ class Schedule:
 
                 for task in self.tasks:
 
-                    def func(task: Task):
-                        if task.schedule_condition.matches(datetime.now()):
-                            injected_params = self.__get_injected_params(task)
-                            try:
-                                value = task.func(**injected_params)
-                                if task.after_success is not None:
-                                    task.after_success.print = print_green_bright
-                                    task.after_success(value)
-
-                            except Exception as error:
-                                if task.after_failure is not None:
-                                    task.after_failure.print = print_bold_red
-                                    task.after_failure(error)
-
-                            finally:
-                                if task.always is not None:
-                                    task.always.print = print_cyan_bright
-                                    task.always()
-
-                    Thread(target=func, args=[task]).start()
+                    Thread(target=self.func, args=[task]).start()
 
                 sleep(self.loop_time)
 
@@ -108,13 +87,22 @@ class Schedule:
 
             sys.exit(0)
 
-    def resources(self):
-        import psutil
-        import os
-
-        process_id = os.getpid()
-
-        process = psutil.Process(process_id)
-        memory_usage = process.memory_info().rss / 1024  # Em KB
-
-        return memory_usage
+    def func(self, task: Task):
+        now = datetime.now()
+        if task.condition.matches(now):
+            injected_params = self.__get_injected_params(task)
+            try:
+                value = task.func(**injected_params)
+                if task.after_success is not None:
+                    task.after_success.print = print_green_bright  # type: ignore  # noqa
+                    task.after_success(value)
+            except Exception as error:
+                if task.after_failure is not None:
+                    task.after_failure.print = print_bold_red  # type: ignore  # noqa
+                    task.after_failure(error)
+                else:
+                    raise
+            finally:
+                if task.always is not None:
+                    task.always.print = print_cyan_bright  # type: ignore  # noqa
+                    task.always()

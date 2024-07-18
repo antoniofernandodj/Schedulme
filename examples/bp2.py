@@ -1,7 +1,6 @@
 from schedule import (
     Blueprint,
     Every,
-    Minute,
     Hour,
     Second,
 )
@@ -20,11 +19,11 @@ def bp2_1_test_every_second_30():
     print(f"Task test_every_second_30 executed at {datetime.now()}.")
 
 
-# Esta executando varias vezes caso o minuto seja 30.
-# seria interessante apenas uma vez
-@bp2_2.task(Every(Minute(30)))
-def bp2_2_test_every_minute_30():
-    print(f"Task test_every_minute_30 executed at {datetime.now()}.")
+# # Esta executando varias vezes caso o minuto seja 30.
+# # seria interessante apenas uma vez
+# @bp2_2.task(Every(Minutes(30)))
+# def bp2_2_test_every_minute_30():
+#     print(f"Task test_every_minute_30 executed at {datetime.now()}.")
 
 
 @bp2.task(Every(Hour(4)))

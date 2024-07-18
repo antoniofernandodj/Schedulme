@@ -2,11 +2,12 @@ from schedule import (
     Schedule,
     Blueprint,
     Every,
-    DayTime,
+    Time,
+    Date,
     Once,
     Second,
 )
-from datetime import datetime, date
+from datetime import datetime
 import time
 import random
 
@@ -27,7 +28,7 @@ def on_error(error):
 
 
 def always():
-    always.print("This always happen")
+    always.print("This here always happen")
 
 
 @bp1.task(
@@ -42,7 +43,7 @@ def bp1_test_every_second_with_callbacks(scheduler: Schedule, task: Task):
     print("Executing long running task...")
     time.sleep(3)
 
-    print(f"Task test_every_second_with_callbacks executed at {datetime.now()}.")
+    print(f"Task test_every_second_with_callbacks executed at {datetime.now()}.")  # noqa
 
     if random.random() > 0.5:
         print(3 / 0)
@@ -50,19 +51,12 @@ def bp1_test_every_second_with_callbacks(scheduler: Schedule, task: Task):
     return "Success!"
 
 
-@bp1.task(schedule=Once(date(day=10, month=8, year=2024)))
+@bp1.task(schedule=Once(Date(day=10, month=8, year=2024)))
 def bp1_test_once_date():
     print(f"Task test_once_date executed at {datetime.now()}.")
     return "Success!"
 
 
-@bp1.task(
-    Once(datetime(hour=12, minute=0, second=0, day=10, month=8, year=2024))
-)  # noqa
-def bp1_test_once_datetime():
-    print(f"Task test_once_datetime executed at {datetime.now()}.")
-
-
-@bp1.task(Every(DayTime(hour=19, minute=44, second=0)))
+@bp1.task(Every(Time(hour=19, minute=44, second=0)))
 def bp1_test_every_x_daytime():
     print(f"Task test_every_x_daytime ! executed at {datetime.now()}.")

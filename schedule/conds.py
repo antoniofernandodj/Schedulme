@@ -1,55 +1,66 @@
 import abc
 from datetime import date, datetime, time
-from typing import Generic, List, Optional, Union, TypeVar, TypeGuard, Type  # noqa
-
-TimeConditionValueType = TypeVar("TimeConditionValueType")
-ScheduleConditionValueType = Union[date, datetime, "TimeCondition", Type["Second"]]
+from typing import Any, Dict, Generic, List, Optional, TypeVar, TypeGuard  # noqa
 
 
-class TimeCondition(Generic[TimeConditionValueType], abc.ABC):
-
-    value: TimeConditionValueType
-
-    @abc.abstractmethod
-    def matches(self, current_time: datetime) -> bool:
-        pass
+ConditionValueType = TypeVar("ConditionValueType")
 
 
-class ScheduleCondition(abc.ABC):
-    value: ScheduleConditionValueType
+class Condition(Generic[ConditionValueType], abc.ABC):
+
+    value: ConditionValueType
 
     @abc.abstractmethod
     def matches(self, current_time: datetime) -> bool:
         pass
 
 
-class Once(ScheduleCondition):
+class Time(Condition):
+    def __init__(self, hour: int, minute: int, second: int):
+        self.time = time(hour, minute, second)
+
+    def matches(self, current_time: datetime) -> bool:
+
+        c = current_time
+        t = self.time
+        return (
+            c.hour == t.hour and
+            c.minute == t.minute and
+            c.second == t.second
+        )
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.time.strftime('%H:%M:%S')})"
+
+
+class Date(Condition):
+    def __init__(self, day: int, month: int, year: int):
+        self.date = date(year, month, day)
+
+    def matches(self, current_time: datetime) -> bool:
+        if not isinstance(current_time, datetime):
+            raise TypeError
+
+        return current_time == self.date
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.date})"
+
+
+class Once(Condition):
 
     executed: List["Once"] = []
 
-    def __init__(self, value: ScheduleConditionValueType) -> None:
-        if isinstance(value, date) and not isinstance(value, datetime):
-            value = datetime.combine(value, datetime.min.time())
-        self.value: ScheduleConditionValueType = value
+    def __init__(self, value: Condition) -> None:
+
+        self.value: Condition = value
 
     def matches(self, current_time: datetime) -> bool:
         if self in self.executed:
             return False
 
-        elif isinstance(self.value, datetime):
-            result = (self.value - current_time).seconds == 0
-
-        elif isinstance(self.value, date):
-            datetime_obj = datetime.combine(self.value, datetime.min.time())
-            result = (datetime_obj - current_time).seconds == 0
-
-        elif not isinstance(self.value, datetime) and issubclass(
-            type(self.value), TimeCondition
-        ):
-            result = self.value.matches(current_time)
-
         else:
-            raise NotImplementedError
+            result = self.value.matches(current_time)  # type: ignore
 
         if result is True:
             self.executed.append(self)
@@ -57,99 +68,184 @@ class Once(ScheduleCondition):
         return result
 
 
-class Every(ScheduleCondition):
-    def __init__(self, value: ScheduleConditionValueType) -> None:
-        self.value: ScheduleConditionValueType
-        self.value = value
+class Every(Condition):
+    def __init__(self, value: Condition) -> None:  # type: ignore
+        self.value: Condition = value
 
     def matches(self, current_time: datetime) -> bool:
 
-        if isinstance(self.value, datetime):
-            result = (self.value - current_time).seconds == 0
-
-        elif isinstance(self.value, date):
-            datetime_obj = datetime.combine(self.value, datetime.min.time())
-            result = (datetime_obj - current_time).seconds == 0
-
-        elif not isinstance(self.value, datetime) and issubclass(
-            type(self.value), TimeCondition
-        ):
-            result = self.value.matches(current_time)
-
-        elif self.value == Second:
-            result = True
-
-        else:
-            breakpoint()
-            raise NotImplementedError
+        result = self.value.matches(current_time)  # type: ignore
 
         return result
 
 
-class DayTime(TimeCondition):
-    def __init__(self, hour: int, minute: int, second: int):
-        self.time = time(hour, minute, second)
+GenericTimeValue = TypeVar('GenericTimeValue')
+
+
+class Between(Condition):
+    def __init__(self, t1: 'GenericTimeValue', t2: 'GenericTimeValue') -> None:
+        self.value: GenericTimeValue = t1
+        self.value2: GenericTimeValue = t2
 
     def matches(self, current_time: datetime) -> bool:
-        c = current_time
-        t = self.time
-        return c.hour == t.hour and c.minute == t.minute and c.second == t.second
+        if isinstance(self.value, Time) and isinstance(self.value2, Time):
+
+            t1 = self.value.time
+            t2 = self.value2.time
+
+            return t1 <= current_time.time() <= t2
+
+        elif isinstance(self.value, Date) and isinstance(self.value2, Date):
+
+            d1 = self.value.date
+            d2 = self.value2.date
+
+            return d1 <= current_time <= d2
+
+        else:
+            raise TypeError
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.time.strftime('%H:%M:%S')})"
+        return f"{self.__class__.__name__}({self.value}, {self.value2})"
 
 
-class Second(TimeCondition):
+class After(Condition):
+    def __init__(
+        self, value: Any,
+    ) -> None:
+        self.value: Any = value
+
+    def matches(self, current_time: datetime) -> bool:
+        if isinstance(self.value, Time):
+            ct = current_time.time()
+            return self.value.time < ct
+
+        elif isinstance(self.value, Date):
+            cd = current_time.date()
+            return self.value.date < cd
+
+        else:
+            raise TypeError
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.value})"
+
+
+class Daily(Condition):
+    days_executed: Dict[date, Condition] = {}
+
+    def __init__(self, value: Condition) -> None:
+        self.value: Condition = value
+
+    def matches(self, current_time: datetime) -> bool:
+        if self.days_executed.get(date.today()) is self.value:
+            return False
+
+        result = self.value.matches(current_time)  # type: ignore
+
+        if result is True:
+            self.days_executed[date.today()] = self.value
+
+        return True
+
+
+class Weekly(Condition):
+    def __init__(self, value: Condition) -> None:
+        self.value: Condition = value
+        self.last_execution: Optional[date] = None
+
+    def matches(self, current_time: datetime) -> bool:
+        if not isinstance(current_time, datetime):
+            raise TypeError
+
+        today = current_time.date()
+        if (
+            self.last_execution is None or
+            (today - self.last_execution).days >= 7
+        ):
+            if self.value.matches(current_time):
+                self.last_execution = today
+                return True
+        return False
+
+
+class Monthly(Condition):
+    def __init__(self, value: Condition) -> None:
+        self.value: Condition = value
+        self.last_execution: Optional[date] = None
+
+    def matches(self, current_time: datetime) -> bool:
+        if not isinstance(current_time, datetime):
+            raise TypeError
+
+        today = current_time.date()
+        if (
+            self.last_execution is None or
+            (today.year, today.month) != (
+                self.last_execution.year, self.last_execution.month
+            )
+        ):
+            if self.value.matches(current_time):
+                self.last_execution = today
+                return True
+        return False
+
+
+class Second(Condition):
     def __init__(self, value: Optional[int] = None):
         self.value = value
 
     def matches(self, current_time: datetime) -> bool:
         if self.value is None:
             return True
+        if not isinstance(current_time, (datetime, time)):
+            raise TypeError
+
         return current_time.second == self.value
 
     def __str__(self):
+        if self.value is None:
+            return f"{self.__class__.__name__}"
+
         return f"{self.__class__.__name__}({self.value})"
 
 
-class Minute(TimeCondition):
+class Hour(Condition):
     def __init__(self, value: int):
         self.value = value
 
     def matches(self, current_time: datetime) -> bool:
-        return current_time.minute == self.value
+        if not isinstance(current_time, (datetime, time)):
+            raise TypeError
 
-    def __str__(self):
-        return f"{self.__class__.__name__}({self.value})"
-
-
-class Hour(TimeCondition):
-    def __init__(self, value: int):
-        self.value = value
-
-    def matches(self, current_time: datetime) -> bool:
         return current_time.hour == self.value
 
     def __str__(self):
         return f"{self.__class__.__name__}({self.value})"
 
 
-class DayOfWeek(TimeCondition):
+class DayOfWeek(Condition):
     def __init__(self, value: int):
         self.value = value
 
     def matches(self, current_time: datetime) -> bool:
+        if not isinstance(current_time, (datetime, date)):
+            raise TypeError
+
         return current_time.weekday() == self.value
 
     def __str__(self):
         return f"{self.__class__.__name__}({self.value})"
 
 
-class DayOfMonth(TimeCondition):
+class DayOfMonth(Condition):
     def __init__(self, value: int):
         self.value = value
 
     def matches(self, current_time: datetime) -> bool:
+        if not isinstance(current_time, (datetime, date)):
+            raise TypeError
+
         return current_time.day == self.value
 
     def __str__(self):
