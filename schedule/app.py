@@ -19,6 +19,7 @@ class Schedule:
         self.name = name
         self.tasks: List[Task] = []
         self.blueprints: List[Blueprint] = []
+        self.start_time = datetime.now()
 
     def task(
         self,

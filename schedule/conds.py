@@ -243,10 +243,52 @@ class DayOfMonth(Condition):
         self.value = value
 
     def matches(self, current_time: datetime) -> bool:
-        if not isinstance(current_time, (datetime, date)):
-            raise TypeError
-
         return current_time.day == self.value
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.value})"
+
+
+class N_Seconds(Condition):
+    def __init__(self, value: int, app: Optional[Any] = None):
+        self.value = value
+        self.app = app
+
+    def matches(self, current_time: datetime) -> bool:
+        if self.app:
+            delta_time = self.app.start_time.second - current_time.second
+            return delta_time % self.value == 0  # noqa
+        return current_time.second % self.value == 0
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.value})"
+
+
+class N_Minutes(Condition):
+    def __init__(self, value: int, app: Optional[Any] = None):
+        self.value = value
+        self.app = app
+
+    def matches(self, current_time: datetime) -> bool:
+        if self.app:
+            delta_time = self.app.start_time.minute - current_time.minute
+            return delta_time % self.value == 0
+        return current_time.minute % self.value == 0
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.value})"
+
+
+class N_Hours(Condition):
+    def __init__(self, value: int, app: Optional[Any] = None):
+        self.value = value
+        self.app = app
+
+    def matches(self, current_time: datetime) -> bool:
+        if self.app:
+            delta_time = self.app.start_time.hour - current_time.hour
+            return delta_time % self.value == 0
+        return current_time.hour % self.value == 0
 
     def __str__(self):
         return f"{self.__class__.__name__}({self.value})"

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from schedule.conds import Condition
 from typing import Callable, List, Optional
 
@@ -16,6 +17,7 @@ class Blueprint:
     def __init__(self, name) -> None:
         self.name = name
         self.tasks: List[Task] = []
+        self.start_time = datetime.now()
 
     def register_blueprint(self, blueprint: "Blueprint"):
         for task in blueprint.tasks:

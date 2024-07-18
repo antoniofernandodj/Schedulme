@@ -14,6 +14,9 @@ from schedule.conds import (  # noqa
     DayOfMonth,
     DayOfWeek,
     Between,
-    After
+    After,
+    N_Hours,
+    N_Minutes,
+    N_Seconds
 )
 from schedule.app import Schedule  # noqa
