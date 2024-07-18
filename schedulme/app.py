@@ -1,20 +1,20 @@
 from datetime import datetime
 import inspect
 from time import sleep
-from typing import List, Tuple, Callable, TypeGuard  # noqa
+from typing import List, Callable, TypeGuard  # noqa
 from threading import Thread
 
-from schedule.utils import (
+from schedulme.utils import (
     print_bold_red,
     print_cyan_bright,
     print_green_bright,
     print_yellow,
 )
-from schedule.blueprint import Blueprint, Task
-from schedule.conds import Condition
+from schedulme.blueprint import Blueprint, Task
+from schedulme.conds import Condition
 
 
-class Schedule:
+class Schedulme:
     def __init__(self, name: str) -> None:
         self.name = name
         self.tasks: List[Task] = []
@@ -47,10 +47,10 @@ class Schedule:
             self.tasks.append(task)
 
     def display_tasks(self):
-        print_cyan_bright("Scheduled Tasks:")
+        print_cyan_bright("Schedulmed Tasks:")
         for task in self.tasks:
             print_yellow(
-                "Task: {}, Schedule: {}({})".format(
+                "Task: {}, Schedulme: {}({})".format(
                     task.func.__name__,
                     task.condition.__class__.__name__,
                     task.condition.value,
@@ -71,7 +71,7 @@ class Schedule:
     def run(self, debug: bool, loop_time: float = 1.0):
         self.loop_time = loop_time
         self.display_tasks()
-        print_green_bright(f"Scheduler {self.name} is running...\n")  # noqa
+        print_green_bright(f"Schedulmer {self.name} is running...\n")  # noqa
         try:
             while True:
                 if debug:

@@ -1,4 +1,4 @@
-from schedule import (
+from schedulme import (
     Blueprint,
     Every,
     DayOfMonth,
@@ -9,7 +9,7 @@ from schedule import (
 )
 from datetime import datetime
 
-from schedule.conds import Once
+from schedulme.conds import Once
 
 
 bp3 = Blueprint("bp3")

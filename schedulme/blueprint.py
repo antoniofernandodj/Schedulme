@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from schedule.conds import Condition
+from schedulme.conds import Condition
 from typing import Callable, List, Optional
 
 

@@ -8,14 +8,14 @@ from bp1 import bp1  # type: ignore # noqa
 from bp2 import bp2  # type: ignore # noqa
 from bp3 import bp3  # type: ignore # noqa
 
-from schedule import (  # noqa
-    Schedule,
+from schedulme import (  # noqa
+    Schedulme,
     Every,
     Second,
 )
 
 
-app = Schedule(__name__)
+app = Schedulme(__name__)
 
 
 app.register_blueprint(bp1)

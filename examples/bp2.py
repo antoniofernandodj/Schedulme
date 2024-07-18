@@ -1,4 +1,4 @@
-from schedule import (
+from schedulme import (
     Blueprint,
     Every,
     Hour,

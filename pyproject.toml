@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "sched"
+name = "schedulme"
 version = "0.1.0"
 description = ""
 authors = ["Antonio Fernando <antoniofernandodj@outlook.com>"]

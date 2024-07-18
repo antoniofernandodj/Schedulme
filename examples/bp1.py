@@ -1,5 +1,5 @@
-from schedule import (
-    Schedule,
+from schedulme import (
+    Schedulme,
     Blueprint,
     Every,
     Time,
@@ -11,7 +11,7 @@ from datetime import datetime
 import time
 import random
 
-from schedule.blueprint import Task
+from schedulme.blueprint import Task
 
 
 bp1 = Blueprint("bp1")
@@ -37,7 +37,7 @@ def always():
     after_failure=on_error,
     always=always,
 )
-def bp1_test_every_second_with_callbacks(scheduler: Schedule, task: Task):
+def bp1_test_every_second_with_callbacks(scheduler: Schedulme, task: Task):
     # scheduler.loop_time += 1
 
     print("Executing long running task...")
