@@ -1,7 +1,7 @@
 from datetime import datetime
 import inspect
 from time import sleep
-from typing import List, Callable, TypeGuard  # noqa
+from typing import Any, Dict, List, Callable, Optional, TypeGuard  # noqa
 from threading import Thread
 
 from schedulme.utils import (
@@ -15,11 +15,13 @@ from schedulme.conds import Condition
 
 
 class Schedulme:
+    state: Dict[str, Any] = dict()
+    state['start_time'] = datetime.now()
+
     def __init__(self, name: str) -> None:
         self.name = name
         self.tasks: List[Task] = []
         self.blueprints: List[Blueprint] = []
-        self.start_time = datetime.now()
 
     def task(
         self,
@@ -75,7 +77,7 @@ class Schedulme:
         try:
             while True:
                 if debug:
-                    print(datetime.now())
+                    print(datetime.now().time())
 
                 for task in self.tasks:
 

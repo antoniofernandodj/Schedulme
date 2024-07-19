@@ -12,20 +12,26 @@ from schedulme import (  # noqa
     Schedulme,
     Every,
     Second,
+    N_Seconds
 )
 
 
 app = Schedulme(__name__)
 
 
-app.register_blueprint(bp1)
-app.register_blueprint(bp2)
-app.register_blueprint(bp3)
+# app.register_blueprint(bp1)
+# app.register_blueprint(bp2)
+# app.register_blueprint(bp3)
 
 
-@app.task(Every(Second()))
-def app_test_every_second():
-    print(f"Task test_every_second executed at {datetime.now()}.")
+# @app.task(Every(Second()))
+# def app_test_every_second():
+#     print(f"Task test_every_second executed at {datetime.now()}.")
+
+
+@app.task(Every(N_Seconds(5)))
+def bp2_1_test_every_5_seconds():
+    print(f"Task test_every_5_seconds executed at {datetime.now()}.")
 
 
 if __name__ == "__main__":
