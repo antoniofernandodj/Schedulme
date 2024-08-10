@@ -13,3 +13,4 @@ Logging Avançado: Melhorar o sistema de logs para registrar eventos relevantes,
 Interfaces Gráficas ou APIs: Criar interfaces gráficas ou APIs para configurar e monitorar tarefas de forma mais amigável.
 
 Suporte a Timezones: Implementar suporte a fusos horários para lidar com agendamentos que dependem de diferentes localidades.
+# Schedulme
